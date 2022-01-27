@@ -58,64 +58,6 @@ const globalStyles = StyleSheet.create({
         textAlign:'center',
         fontWeight:'bold',
         fontSize:15
-    },
-    redButton:{
-        paddingVertical: 12,
-        paddingHorizontal: 32,
-        backgroundColor: '#1396ed',
-        borderRadius:25,
-        justifyContent:'center'
-    },
-    redText:{
-        color:'red',
-        textAlign:'center',
-        fontWeight:'bold',
-        fontSize:15
-    },
-    scrollView:{
-        width:'100%',
-        height:'100%'
-    },
-    cardRow:{
-        paddingTop:10
-    },
-    text:{
-        fontSize:14
-    },
-    text2:{
-        fontSize:15,
-        paddingBottom:5
-    },
-    invalidText:{
-        color:'red',
-        fontSize:14,
-        paddingTop:10
-    },
-    title:{
-        fontSize:23,
-        fontWeight:'bold',
-    },
-    subTitle:{
-        fontWeight:'bold',
-        fontSize:17
-    },
-    contentView:{
-        padding:10 
-    },
-    subtitleView:{
-        paddingTop:15,
-        flexDirection:'row', 
-        justifyContent:'space-between',
-    },
-    qrCode:{
-        width:'100%', 
-        height:'100%', 
-        borderRadius:15
-    },
-    qrButton:{
-        borderRadius:20,
-        width:60, 
-        height:60
     }
     
   });
