@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import Home from './screens/Home';
 import InfoFill from './screens/InfoFill';
+import Results from './screens/Results';
 
 const { Screen, Navigator } = createNativeStackNavigator();
 
@@ -35,6 +36,11 @@ function ScreenStack() {
         name='InfoFill'
         component={InfoFill}
         options={{ title: 'Info'}}
+      />
+      <Screen
+        name='Results'
+        component={Results}
+        options={{ title: 'Results'}}
       /> 
     </Navigator>
   );

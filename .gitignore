@@ -1,1 +1,4 @@
+.DS_Store
 node_modules/
+*cars.xlsx
+carData.json
