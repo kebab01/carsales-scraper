@@ -7,12 +7,15 @@ import {
   View,
   SafeAreaView,
   Pressable,
+  Alert
 } from "react-native";
 import globalStyles from "../styles";
 import * as Progress from "react-native-progress";
 import InfoComponent from "./InfoComponent";
 import { useIsFocused } from "@react-navigation/native";
 import { processData } from "../Process";
+import carData from '../carData.json'
+import AsyncAlert from '../shared/AsyncAlert'
 
 const cheerio = require("react-native-cheerio");
 
@@ -38,23 +41,8 @@ const STATE_EXPR_ENUM = {
   VIC: "Victoria",
   WA: "Western Australia",
 };
-const HEADERS = {
-  authority: "www.carsales.com.au",
-  "upgrade-insecure-requests": "1",
-  "user-agent":
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36",
-  accept:
-    "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-  "sec-gpc": "1",
-  "sec-fetch-site": "same-origin",
-  "sec-fetch-mode": "navigate",
-  "sec-fetch-user": "?1",
-  "sec-fetch-dest": "document",
-  referer: "https://www.carsales.com.au/",
-  "accept-language": "en-GB,en-US;q=0.9,en;q=0.8",
-};
 
-export default function Home({ route, navigation }) {
+export default function BuyScreen({ route, navigation }) {
   const [brands, setBrands] = useState([]);
   const [models, setModels] = useState([]);
   const [body_types, setBodyTypes] = useState([]);
@@ -62,8 +50,8 @@ export default function Home({ route, navigation }) {
 
   const [selectBrand, changeSelectBrand] = useState();
   const [selectModel, changeSelectModel] = useState();
-  const [selectState, changeselectState] = useState();
-  const [selectBodyType, changeselectBodyType] = useState();
+  const [selectState, changeSelectState] = useState(undefined);
+  const [selectBodyType, changeSelectBodyType] = useState();
 
   const [searchPressed, changePressed] = useState(false);
   const [progress, changeProgress] = useState(0);
@@ -79,14 +67,15 @@ export default function Home({ route, navigation }) {
   useEffect(() => {
     changeSelectBrand(route.params?.brand);
     changeSelectModel(route.params?.model);
-    changeselectState(route.params?.state);
-    changeselectBodyType(route.params?.bodyType);
+    changeSelectState(route.params?.state);
+    changeSelectBodyType(route.params?.bodyType);
   }, [isFocused]);
 
   const cars = [];
   const BASE_URL = "https://www.carsales.com.au/";
 
   const getCarDetails = (soup) => {
+    
     let $ = cheerio.load(soup);
     let link = $('a[class="js-encode-search"]').attr("href");
     let name = $('a[class="js-encode-search"]').html();
@@ -95,7 +84,10 @@ export default function Home({ route, navigation }) {
     let transmission = $('li[data-type="Transmission"]').html();
     let engine = $('li[data-type="Engine"]').html();
     let price = $('a[data-webm-clickvalue="sv-price"]').text();
-
+    let imgBloc = $('div[class="carousel-item active image"]').html()
+    $ = cheerio.load(imgBloc)
+    let img = $('img[class="d-block w-100"]').attr('src')
+    
     return {
       link: link,
       name: name,
@@ -103,7 +95,9 @@ export default function Home({ route, navigation }) {
       body: body,
       transmission: transmission,
       engine: engine,
+      year:name.split(' ')[0],
       price: price,
+      img:img
     };
   };
 
@@ -142,7 +136,7 @@ export default function Home({ route, navigation }) {
       console.log("requeesting next page", next);
       response = await fetch(BASE_URL + next, {
         method: "GET",
-        headers: HEADERS,
+        headers: global.HEADERS,
       }).then((response) => response.text());
 
       await parsePage(response, numResults);
@@ -182,7 +176,7 @@ export default function Home({ route, navigation }) {
     console.log("contructed url", url);
     let response = await fetch(url, {
       method: "GET",
-      headers: HEADERS,
+      headers: global.HEADERS,
     }).then((response) => response.text());
     console.log("response was returned");
 
@@ -205,8 +199,8 @@ export default function Home({ route, navigation }) {
       selectBodyType != undefined &&
       selectState != undefined
     ) {
+      console.log(selectState)
       car = `"(And.Condition.Used._.(C.Make.${selectBrand}._.Model.${selectModel}.)_.State.${STATE_EXPR_ENUM[selectState]}._.BodyStyle.${selectBodyType}.)"`
-      // car = `"(And.(C.Make.${selectBrand}._.Model.${selectModel}.)_.BodyStyle.${selectBodyType}._.State.${STATE_EXPR_ENUM[selectState]}._.(Or.Condition.Used.))"`;
     
     } else if (
       selectBrand != undefined &&
@@ -230,9 +224,10 @@ export default function Home({ route, navigation }) {
     return `{"expression":${car}}`;
   };
   const getOptions = async () => {
+
     const expression = getExpression();
     console.log(expression);
-    let postHeaders = HEADERS;
+    let postHeaders = global.HEADERS;
     postHeaders["content-type"] = "application/json";
 
     try {
@@ -271,8 +266,31 @@ export default function Home({ route, navigation }) {
       console.log(error);
     }
   };
+  
+  const checkRequired = () =>{
+
+    if (selectBrand==undefined || selectModel == undefined || selectBodyType == undefined) {
+      Alert.alert("Please select at least a Brand, Model and Body Type")
+      changePressed(false)
+      return false
+    }
+    else if(availableCars > 1000){
+      const choice = AsyncAlert("Very large data set", `There are ${availableCars} cars to process, this will take at least 2 minutes depending on internet connection. Are you sure you want to proceed?`)
+      if(choice == 'YES') {return true}else{return false}  
+    }
+    else if(availableCars > 5000){
+      Alert.alert('Data set too large', 'Data set is too large, please refine your search criteria')
+      return false
+    }
+    else{
+      return true
+    }
+  }
 
   const handlePress = async () => {
+
+    if (!checkRequired()) return
+
     changePressed(true);
 
     const reqObj = {
@@ -283,11 +301,11 @@ export default function Home({ route, navigation }) {
     };
     
     await request(reqObj);
-    changePressed(false);
+
+    changePressed(false)
 
     const processedCars = processData(cars)
-    navigation.navigate('Results', {data:processedCars, searchParams:reqObj})
-    // processData()
+    navigation.navigate('Results', {data:processedCars})
 
   };
   return (
@@ -304,7 +322,7 @@ export default function Home({ route, navigation }) {
           Carsales Comparision
         </Text>
       </View>
-
+          
       <TouchableOpacity
         onPress={() =>
           navigation.navigate("InfoFill", {
@@ -361,7 +379,7 @@ export default function Home({ route, navigation }) {
         {!searchPressed ? (
           <>
             <Text style={{ paddingBottom: 10 }}>
-              {availableCars} available {selectBrand}'s
+              {availableCars} used {selectBrand}'s available
             </Text>
 
             <Pressable
@@ -373,9 +391,9 @@ export default function Home({ route, navigation }) {
           </>
         ) : (
           <>
-            <Progress.Bar progress={progress} width={300} color="#07b524" />
+            <Progress.Bar progress={progress} width={300} color="#128cde" />
             <Text style={{ paddingTop: 5 }}>
-              {isRetrieving ? "Retrieving Data" : "Processing data"}
+              {isRetrieving ? `Retrieving data of ${availableCars} cars...` : "Processing data"}
             </Text>
           </>
         )}

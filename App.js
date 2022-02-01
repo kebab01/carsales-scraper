@@ -1,11 +1,11 @@
 import { StyleSheet, Text, View } from 'react-native';
-import ScreenNavigator from './ScreenNavigator';
-import Home from './screens/Home';
+import ScreenTabNavigator from './routes/ScreenTabNavigator';
+import './global'
 
 export default function App() {
 
   return (
-    <ScreenNavigator/>
+    <ScreenTabNavigator/>
   );
 }
 

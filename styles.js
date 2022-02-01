@@ -4,8 +4,9 @@ import {StyleSheet } from 'react-native';
 const globalStyles = StyleSheet.create({
     screen: {
         flex: 1,
+        alignItems: 'center',
+        justifyContent: 'center',
         width:'100%',
-        margin:10
     },
     list: {
         padding: 10,
@@ -48,7 +49,8 @@ const globalStyles = StyleSheet.create({
     blueButton:{
         paddingVertical: 12,
         paddingHorizontal: 32,
-        backgroundColor: '#07b524',
+        // backgroundColor: '#07b524',
+        backgroundColor:'#128cde',
         borderRadius:25,
         justifyContent:'center'
     },
